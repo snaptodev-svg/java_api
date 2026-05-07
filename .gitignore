@@ -1,0 +1,6 @@
+/dist/
+/build/
+/target/
+/nbproject/private/
+.DS_Store
+.env
