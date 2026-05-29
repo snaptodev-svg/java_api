@@ -803,6 +803,12 @@ public Response sendOTP(String jsonData) {
 
         // Generate OTP
         String otp = CommonUtil.generateOTP();
+       // === BYPASS: Override OTP for test mobile ===
+	if (mobile.equals("1234567890")) {
+	    otp = "098765"; // hardcoded test OTP
+	}
+	// ============================================
+
         Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
                 "Generated OTP: " + otp + " for mobile: " + mobile);
 
@@ -819,7 +825,20 @@ public Response sendOTP(String jsonData) {
             responseObj.put("warning", "Database error, but OTP generated: " + otp);
         }
 
-        if (dbInsertStatus) {
+        if (dbInsertStatus) { 
+              // === BYPASS: Skip SMS for test number ===
+	    if (mobile.equals("1234567890")) {
+	        responseObj.put("status", "success");
+	        responseObj.put("code", 200);
+	        responseObj.put("message", "OTP sent successfully");
+	        responseObj.put("mobile", mobile);
+	        responseObj.put("otp_length", otp.length());
+	        responseObj.put("sms_sent", true);
+	        responseObj.put("email_sent", false);
+	        responseObj.put("note", "Test mode: OTP bypassed");
+	        return Response.ok(responseObj.toString()).build();
+	    }
+	    // ========================================
             // OTP saved successfully, send via SMS/Email
             String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
             boolean smsSent = false;
