@@ -63,7 +63,8 @@ public class SendSmtpMail {
     public static String sendSSLMessagewithBcc(String[] recipients, String[] ccrecipients, String subject, String message)
             throws MessagingException, UnsupportedEncodingException {
 
-        String from = "info@snapto.in";
+        // String from = "info@snapto.in";
+        String from = "mohitdevdubey@gmail.com";
         String sendStatus = null;
         Properties props = new Properties();
         props.put("mail.smtp.host", "smtp.gmail.com"); //SMTP Host
@@ -73,7 +74,9 @@ public class SendSmtpMail {
 
         session = Session.getInstance(props, new Authenticator() {
             protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication("info@snapto.in", "oyjcxzwfqrrlxnfn");
+                // return new PasswordAuthentication("info@snapto.in", "oyjcxzwfqrrlxnfn");
+         return new PasswordAuthentication("mohitdevdubey@gmail.com", "gkzlextlbhkoqpss");
+        
             }
         });
 
