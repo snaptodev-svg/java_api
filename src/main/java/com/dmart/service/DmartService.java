@@ -2553,7 +2553,7 @@ public Response verifyOTP(String jsonData) {
                                    String mobile, double amount, String deliveryDate, 
                                    String slot, String paymentType) {
     try {
-        String[] adminRecipients = {ADMIN_EMAIL};
+        String[] adminRecipients = {Constants.ADMIN_EMAIL};
         String subject = "New Order #" + orderNo + " from " + customerEmail;
         String body = "<h3>New Order Placed</h3>"
                     + "<b>Order Number:</b> " + orderNo + "<br>"
