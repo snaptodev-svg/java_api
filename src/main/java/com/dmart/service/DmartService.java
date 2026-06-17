@@ -824,15 +824,9 @@ public Response sendOTP(String jsonData) {
 	    }
 	    // ========================================
             // OTP saved successfully, send via SMS/Email
-<<<<<<< HEAD
-            // String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE"; 
-            String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
-            boolean smsSent = false;
-=======
           //  String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
             String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
 	    boolean smsSent = false;
->>>>>>> 695ac84d4ddd56e6e2b0461974a2c2aba0eb95d7
             boolean emailSent = false;
 
             if (mobile.length() == 10) {
