@@ -287,7 +287,7 @@ public class DmartService implements Filter {
                     String email = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getString("userEmail");
                     double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");         
                     String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
-                    String[] bccrecipients = {"anuj@qmmtech.com"};
+                    String[] bccrecipients = {"info@snapto.in"};
                     String[] recipients = {email};
                     try {       
                         SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
@@ -505,7 +505,7 @@ public class DmartService implements Filter {
 //                        mobile = ServiceDao.getMobile(email);
 //                    }
                         String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
-                        String[] bccrecipients = {"anuj@qmmtech.com"};
+                        String[] bccrecipients = {"info@snapto.in"};
                         String[] recipients = {email};
                         try {
                             SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
@@ -699,7 +699,7 @@ public class DmartService implements Filter {
      
                 String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
                 SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
-                String[] bccrecipients = {"anuj@qmmtech.com"};
+                String[] bccrecipients = {"info@snapto.in"};
                 String[] recipients = {email};
                 try {
                     String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
@@ -1598,7 +1598,7 @@ public Response verifyOTP(String jsonData) {
         int totalQuantity = 0;
         double weightedShipping = 0;
         String amount = order.getString("total_gross_amount");
-        String[] bccrecipients = {"anuj@qmmtech.com"};
+        String[] bccrecipients = {"info@snapto.in"};
         String[] recipients = {email};
         DecimalFormat df = new DecimalFormat("#0.00");
         try {
@@ -1716,7 +1716,7 @@ public Response verifyOTP(String jsonData) {
         double weightedShipping = 0;
         String email = order.getString("userEmail");
         double amount = order.getJSONObject("total").getJSONObject("gross").getDouble("amount");
-        String[] bccrecipients = {"anuj@qmmtech.com"};
+        String[] bccrecipients = {"info@snapto.in"};
         String[] recipients = {email};
         DecimalFormat df = new DecimalFormat("#0.00");
         try {
@@ -1837,7 +1837,7 @@ public Response verifyOTP(String jsonData) {
         int totalQuantity = 0;
         double weightedShipping = 0;
         String amount = order.getString("total_gross_amount");
-        String[] bccrecipients = {"anuj@qmmtech.com"};
+        String[] bccrecipients = {"info@snapto.in"};
         String[] recipients = {email};
         DecimalFormat df = new DecimalFormat("#0.00");
         try {
@@ -1940,7 +1940,7 @@ public Response verifyOTP(String jsonData) {
         int totalQuantity = 0;
         double weightedShipping = 0;
         String amount = order.getString("total_gross_amount");
-        String[] bccrecipients = {"anuj@qmmtech.com"};
+        String[] bccrecipients = {"info@snapto.in"};
         String[] recipients = {email};
         DecimalFormat df = new DecimalFormat("#0.00");
         boolean status = false;
@@ -2084,7 +2084,7 @@ public Response verifyOTP(String jsonData) {
         int totalQuantity = 0;
         double weightedShipping = 0;
         String amount = order.getString("total_gross_amount");
-        String[] bccrecipients = {"anuj@qmmtech.com"};
+        String[] bccrecipients = {"info@snapto.in"};
         String[] recipients = {email};
         DecimalFormat df = new DecimalFormat("#0.00");
         try {
@@ -2348,7 +2348,7 @@ public Response verifyOTP(String jsonData) {
             String email = resobj1.getJSONObject("data").getJSONObject("order").getString("userEmail");
             String orderNumber = resobj1.getJSONObject("data").getJSONObject("order").getString("number");
             if (email.equals(userEmail)) {
-                String[] bccrecipients = {"anuj@qmmtech.com"};
+                String[] bccrecipients = {"info@snapto.in"};
                 String[] recipients = {"care.mrpc@gmail.com"};
                 try {
                     String emailMessage = EmailConstants.EMAIL_HEAD
