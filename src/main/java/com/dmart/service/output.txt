@@ -285,11 +285,22 @@ public class DmartService implements Filter {
                     String mobile = order.getJSONObject("shippingAddress").getString("phone");
                     mobile = mobile.substring(3, mobile.length());
                     String email = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getString("userEmail");
-                    double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");         
+                    double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");
+//                    if (!isLogin) {
+//                        JSONArray metaArr1 = checkout.getJSONArray("metadata");
+//                        for (int i = 0; i < metaArr1.length(); i++) {
+//                            JSONObject data = metaArr1.getJSONObject(i);
+//                            if (data.getString("key").equalsIgnoreCase("mobile")) {
+//                                mobile = data.getString("value");
+//                            }
+//                        }
+//                    } else {
+//                        mobile = ServiceDao.getMobile(email);
+//                    }
                     String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
                     String[] bccrecipients = {"anuj@qmmtech.com"};
                     String[] recipients = {email};
-                    try {       
+                    try {
                         SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                         String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
                                 + EmailConstants.EMAIL_ORDER_BODY_SUMMARY.replace(Constants.KEY_REPLACE_ORDER_NO, orderNo).replace(Constants.KEY_REPLACE_ORDER_DATE, orderDate).replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount)))
@@ -320,13 +331,11 @@ public class DmartService implements Filter {
 
                         subtotalamount = Double.parseDouble(df.format(subtotalamount - weightedShipping));
                         emailMessage = emailMessage + productData;
-                          sendAdminNotification(orderNo, email, name, mobile, amount, Date, slot, "Online");
                         emailMessage = emailMessage + EmailConstants.EMAIL_ORDER_BODY_PRODUCT_TOTAL.replace(Constants.KEY_REPLACE_TOTAL_QUANTITY, String.valueOf(totalQuantity)).
                                 replace(Constants.KEY_REPLACE_SUBTOTAL_PRICE, String.valueOf(df.format(subtotalamount))).replace(Constants.KEY_REPLACE_SHIPPING_PRICE, shippingamount).
                                 replace(Constants.KEY_REPLACE_WEIGHTED_PRICE, String.valueOf(df.format(weightedShipping))).replace(Constants.KEY_REPLACE_DISCOUNT_PRICE, discountamount).
                                 replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount))).replace(Constants.KEY_REPLACE_VOUCHER_CODE, voucherCode)
                                 + EmailConstants.EMAIL_FOOTER;
-                      
                         SendSmtpMail.sendSSLMessagewithBcc(recipients, bccrecipients, "Your Snapto order " + orderNo + " Placed", emailMessage);
                     } catch (MessagingException | UnsupportedEncodingException ex) {
                         Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
@@ -349,8 +358,6 @@ public class DmartService implements Filter {
         }
         if (message.equals("Success")) {
             ServiceDao.updateOrderPaymentStatus(orderid, "Success", isProdDB);
-            // Send admin notification
-          
             return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
         } else {
             ServiceDao.updateOrderPaymentStatus(orderid, "Failed", isProdDB);
@@ -509,7 +516,6 @@ public class DmartService implements Filter {
                         String[] recipients = {email};
                         try {
                             SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
-                              sendAdminNotification(orderNo, email, name, mobile, amount, Date, slot, "Online");
                             String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
                                     + EmailConstants.EMAIL_ORDER_BODY_SUMMARY.replace(Constants.KEY_REPLACE_ORDER_NO, orderNo).replace(Constants.KEY_REPLACE_ORDER_DATE, orderDate).replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount)))
                                     + EmailConstants.EMAIL_ORDER_BODY_SHIPPING_ADDRESS.replace(Constants.KEY_REPLACE_NAME, name).replace(Constants.KEY_REPLACE_ADDRESS, address).replace(Constants.KEY_REPLACE_COUNTRY, country)
@@ -566,7 +572,7 @@ public class DmartService implements Filter {
             }
             if (message.equals("Success")) {
                 ServiceDao.updateOrderPaymentStatus(orderId, "Success", isProdDB);
-                  return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
+                return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
             } else {
                 ServiceDao.updateOrderPaymentStatus(orderId, "Failed", isProdDB);
                 return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "failure.jsp")).build();
@@ -696,7 +702,17 @@ public class DmartService implements Filter {
                 mobile = mobile.substring(3, mobile.length());
                 String email = order.getString("userEmail");
                 double amount = order.getJSONObject("total").getJSONObject("gross").getDouble("amount");
-     
+//                if (!isLogin) {
+//                    JSONArray metaArr = checkout.getJSONArray("metadata");
+//                    for (int i = 0; i < metaArr.length(); i++) {
+//                        JSONObject data = metaArr.getJSONObject(i);
+//                        if (data.getString("key").equalsIgnoreCase("mobile")) {
+//                            mobile = data.getString("value");
+//                        }
+//                    }
+//                } else {
+//                    mobile = ServiceDao.getMobile(email);
+//                }
                 String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
                 SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                 String[] bccrecipients = {"anuj@qmmtech.com"};
@@ -824,15 +840,8 @@ public Response sendOTP(String jsonData) {
 	    }
 	    // ========================================
             // OTP saved successfully, send via SMS/Email
-<<<<<<< HEAD
-            // String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE"; 
-            String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
+            String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
             boolean smsSent = false;
-=======
-          //  String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
-            String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
-	    boolean smsSent = false;
->>>>>>> 695ac84d4ddd56e6e2b0461974a2c2aba0eb95d7
             boolean emailSent = false;
 
             if (mobile.length() == 10) {
@@ -906,59 +915,38 @@ public Response sendOTP(String jsonData) {
     }
 }
 
-    
-@POST
-@Path("/verifyOTP")
-@Produces({MediaType.APPLICATION_JSON})
-public Response verifyOTP(String jsonData) {
+    @POST
+    @Path("/verifyOTP")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response verifyOTP(String jsonData) {
 
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "MrpCartRequest verify otp data");
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            jsonData);
-
-    LoginResponse lr = new LoginResponse();
-    lr.setApi_status(false);
-    ArrayList<LoginError> arr = new ArrayList<>();
-    LoginError le = new LoginError();
-
-    //Validate params
-    Object output = Util.validateParamsInJSON(jsonData,
-            Constants.KEY_MOBILE, Constants.KEY_OTP);
-    if (output instanceof Error) {
-        le.setField("1");
-        le.setMessage("Please enter valid data.");
-        arr.add(le);
-        lr.setErrors(arr);
-        return Response.ok().entity(lr).build();
-    }
-
-    boolean isProdDB = CommonUtil.checkProdDB(request);
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP isProdDB: " + isProdDB);
-
-    //Params
-    JSONObject obj = new JSONObject(jsonData);
-    String mobile = obj.getString(Constants.KEY_MOBILE);
-    String otp = obj.getString(Constants.KEY_OTP);
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP mobile: " + mobile + " | otp: " + otp);
-
-    boolean status = false; // ⚠️ BUGFIX: declare status before the if-block so it's always in scope
-
-    if (mobile != "1234567890" && otp != "198765") { // ⚠️ NOTE: use .equals() not != for String comparison
         Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP calling ServiceDao.verifyOtp for mobile: " + mobile);
+                "MrpCartRequest verify otp data");
+        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
+                jsonData);
 
+        LoginResponse lr = new LoginResponse();
+        lr.setApi_status(false);
+        ArrayList<LoginError> arr = new ArrayList<>();
+        LoginError le = new LoginError();
+        //Validate params
+        Object output = Util.validateParamsInJSON(jsonData,
+                Constants.KEY_MOBILE, Constants.KEY_OTP);
+        if (output instanceof Error) {
+            le.setField("1");
+            le.setMessage("Please enter valid data.");
+            arr.add(le);
+            lr.setErrors(arr);
+            return Response.ok().entity(lr).build();
+        }
+
+        boolean isProdDB = CommonUtil.checkProdDB(request);
+        //Params
+        JSONObject obj = new JSONObject(jsonData);
+        String mobile = obj.getString(Constants.KEY_MOBILE);
+        String otp = obj.getString(Constants.KEY_OTP);
         ArrayList<HashMap<String, String>> data = ServiceDao.verifyOtp(mobile, otp, isProdDB);
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP ServiceDao.verifyOtp result size: " + data.size());
-
         if (data.isEmpty()) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP OTP verification failed for mobile: " + mobile);
             le.setField("1");
             le.setMessage("Please enter valid OTP.");
             arr.add(le);
@@ -966,184 +954,104 @@ public Response verifyOTP(String jsonData) {
             return Response.ok().entity(lr).build();
         }
 
-        status = ServiceDao.updateMobileOTPStatus(mobile, otp, isProdDB);
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP updateMobileOTPStatus result: " + status + " for mobile: " + mobile);
-
+        boolean status = ServiceDao.updateMobileOTPStatus(mobile, otp, isProdDB);
         lr.setApi_status(status);
-    } else {
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP bypassing OTP check for test credentials");
-        status = true; // ⚠️ BUGFIX: status must be true for test bypass to proceed to account creation
-    }
 
-    ArrayList<BasicNameValuePair> headers = new ArrayList<>();
-    headers.add(0, new BasicNameValuePair("Content-Type", "application/json"));
-    String resData;
-    JSONObject obje;
-    String apiResponse = "";
-    String url;
-
-    if (isProdDB) {
-        url = Constants.HEGMA_API_URL;
-    } else {
-        url = Constants.HEGMA_BETA_API_URL;
-    }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP using API URL: " + url);
-
-    JSONObject resobj;
-    String email;
-    if (mobile.length() == 10) {
-        email = mobile + Constants.HEGMA_DOMAIN;
-    } else {
-        email = mobile;
-    }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP resolved email: " + email + " | status: " + status);
-
-    if (status) {
-        ArrayList<HashMap<String, String>> userData;
-        if (mobile.length() == 10) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP fetching accountUserData for mobile: " + mobile);
-            userData = ServiceDao.accountUserData(mobile, isProdDB);
+        ArrayList<BasicNameValuePair> headers = new ArrayList<>();
+        headers.add(0, new BasicNameValuePair("Content-Type",
+                "application/json"));
+        String resData;
+        JSONObject obje;
+        String apiResponse = "";
+        String url;
+        if (isProdDB) {
+            url = Constants.HEGMA_API_URL;
         } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP fetching accountUserEmailData for email: " + mobile);
-            userData = ServiceDao.accountUserEmailData(mobile, isProdDB);
+            url = Constants.HEGMA_BETA_API_URL;
+        }
+        JSONObject resobj;
+        String email;
+        if (mobile.length() == 10) {
+            email = mobile + Constants.HEGMA_DOMAIN;
+        } else {
+            email = mobile;
         }
 
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP userData size: " + userData.size());
-
-        if (userData.isEmpty()) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP NEW USER — calling accountRegister for email: " + email);
-			resData = "mutation{accountRegister(input: {email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD + "\", channel: \"default-channel\", redirectUrl: \"" + Constants.HEGMA_REDIRECT_URL + "\"}){errors{field message}user{email}}}";            
-     			obje = new JSONObject();
-            obje.put("query", resData);
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP accountRegister request payload: " + obje.toString());
-
-            try {
-                apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister raw API response: " + apiResponse);
-            } catch (MalformedURLException ex) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister MalformedURLException: " + ex.getMessage(), ex);
-            } catch (Exception ex) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister unexpected exception: " + ex.getMessage(), ex);
+        if (status) {
+            ArrayList<HashMap<String, String>> userData;
+            if (mobile.length() == 10) {
+                userData = ServiceDao.accountUserData(mobile, isProdDB);
+            } else {
+                userData = ServiceDao.accountUserEmailData(mobile, isProdDB);
+            }
+            if (userData.isEmpty()) {
+                resData = "mutation{accountRegister(input: {email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD + "\"}){errors{message}user{email}}}";
+                obje = new JSONObject();
+                obje.put("query", resData);
+                try {
+                    apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                resobj = new JSONObject((String) apiResponse);
+                JSONArray errors = resobj.getJSONObject("data").getJSONObject("accountRegister").getJSONArray("errors");
+                if (errors.length() == 0) {
+                    ServiceDao.updateUserMobile(mobile, email, isProdDB);
+                } else {
+                    le.setField("1");
+                    le.setMessage(errors.getJSONObject(0).getString("message"));
+                    arr.add(le);
+                    lr.setErrors(arr);
+                    lr.setApi_status(false);
+                    return Response.ok().entity(lr).build();
+                }
+            } else {
+                if (userData.size() > 0) {
+                    for (int ii = 0; ii < userData.size(); ii++) {
+                        email = userData.get(ii).get("email");
+                    }
+                }
+                if (mobile.length() == 10) {
+                    ServiceDao.updateUserPassword(mobile, isProdDB);
+                } else {
+                    ServiceDao.updateUserEmailPassword(email, Constants.HEGMA_ENC_PASSWORD, isProdDB);
+                }
             }
 
+            resData = "mutation TokenAuth {tokenCreate(email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD
+                    + "\") {errors {field,message},token,refreshToken,user {id,firstName,lastName,email}}}";
+            obje = new JSONObject();
+            obje.put("query", resData);
+            try {
+                apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
+            }
             resobj = new JSONObject((String) apiResponse);
-            JSONArray errors = resobj.getJSONObject("data").getJSONObject("accountRegister").getJSONArray("errors");
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP accountRegister errors count: " + errors.length());
-
+            JSONArray errors = resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONArray("errors");
             if (errors.length() == 0) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister SUCCESS — calling updateUserMobile for mobile: " + mobile);
-                ServiceDao.updateUserMobile(mobile, email, isProdDB);
+                User user = new User();
+                user.setFirstName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("firstName"));
+                user.setLastName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("lastName"));
+                user.setId(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("id"));
+                user.setEmail(email);
+
+                lr.setToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("token"));
+                lr.setRefreshToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("refreshToken"));
+                lr.setUser(user);
+
+                ServiceDao.updateUserEmailPassword(email, "", isProdDB);
+
             } else {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister FAILED — error: " + errors.getJSONObject(0).getString("message"));
                 le.setField("1");
                 le.setMessage(errors.getJSONObject(0).getString("message"));
                 arr.add(le);
                 lr.setErrors(arr);
                 lr.setApi_status(false);
-                return Response.ok().entity(lr).build();
-            }
-        } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP EXISTING USER found — skipping accountRegister");
-
-            if (userData.size() > 0) {
-                for (int ii = 0; ii < userData.size(); ii++) {
-                    email = userData.get(ii).get("email");
-                }
-            }
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP resolved existing user email: " + email);
-
-            if (mobile.length() == 10) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP calling updateUserPassword for mobile: " + mobile);
-                ServiceDao.updateUserPassword(mobile, isProdDB);
-            } else {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP calling updateUserEmailPassword for email: " + email);
-                ServiceDao.updateUserEmailPassword(email, Constants.HEGMA_ENC_PASSWORD, isProdDB);
             }
         }
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP calling tokenCreate for email: " + email);
-
-        resData = "mutation TokenAuth {tokenCreate(email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD
-                + "\") {errors {field,message},token,refreshToken,user {id,firstName,lastName,email}}}";
-        obje = new JSONObject();
-        obje.put("query", resData);
-
-        try {
-            apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate raw API response: " + apiResponse);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate MalformedURLException: " + ex.getMessage(), ex);
-        } catch (Exception ex) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate unexpected exception: " + ex.getMessage(), ex);
-        }
-
-        resobj = new JSONObject((String) apiResponse);
-        JSONArray errors = resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONArray("errors");
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP tokenCreate errors count: " + errors.length());
-
-        if (errors.length() == 0) {
-            User user = new User();
-            user.setFirstName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("firstName"));
-            user.setLastName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("lastName"));
-            user.setId(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("id"));
-            user.setEmail(email);
-
-            lr.setToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("token"));
-            lr.setRefreshToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("refreshToken"));
-            lr.setUser(user);
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate SUCCESS — clearing password for email: " + email);
-
-            ServiceDao.updateUserEmailPassword(email, "", isProdDB);
-        } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate FAILED — error: " + errors.getJSONObject(0).getString("message"));
-            le.setField("1");
-            le.setMessage(errors.getJSONObject(0).getString("message"));
-            arr.add(le);
-            lr.setErrors(arr);
-            lr.setApi_status(false);
-        }
+        return Response.ok().entity(lr).build();
     }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP final response api_status: " + lr.getApi_status());
-
-    return Response.ok().entity(lr).build();
-}
-
-
 
     @POST
     @Path("/bulkDiscounts")
@@ -2555,26 +2463,6 @@ public Response verifyOTP(String jsonData) {
         }
         return Response.ok().entity("").build();
     }
-    private void sendAdminNotification(String orderNo, String customerEmail, String customerName, 
-                                   String mobile, double amount, String deliveryDate, 
-                                   String slot, String paymentType) {
-    try {
-        String[] adminRecipients = {ADMIN_EMAIL};
-        String subject = "New Order #" + orderNo + " from " + customerEmail;
-        String body = "<h3>New Order Placed</h3>"
-                    + "<b>Order Number:</b> " + orderNo + "<br>"
-                    + "<b>Customer:</b> " + customerName + " (" + customerEmail + ", " + mobile + ")<br>"
-                    + "<b>Total Amount:</b> Rs " + String.format("%.2f", amount) + "<br>"
-                    + "<b>Delivery Date:</b> " + deliveryDate + "<br>"
-                    + "<b>Time Slot:</b> " + slot + "<br>"
-                    + "<b>Payment Type:</b> " + paymentType + "<br>"
-                    + "<b>Please check the admin dashboard for details.</b>";
-        SendSmtpMail.sendSSLMessage(adminRecipients, subject, body);
-    } catch (Exception e) {
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, 
-                "Failed to send admin notification for order " + orderNo, e);
-    }
-}
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -2600,5 +2488,4 @@ public Response verifyOTP(String jsonData) {
     public void destroy() {
 
     }
-
 }

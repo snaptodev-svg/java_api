@@ -127,7 +127,7 @@ public class Constants {
         DELETE;
     }
     
-    public static final String MSG91_OTP_DLE_ID = "1007798996029149193";
+    public static final String MSG91_OTP_DLE_ID = "1007683733174567807";
     public static final String MSG91_ORDER_DLE_ID = "1007316412780564316";
     public static final String MSG91_DELIVERY_DLE_ID = "1007170778604617101";
     public static final String MSG91_SHIPMENT_DLE_ID = "1007116103197820760";
@@ -137,7 +137,7 @@ public class Constants {
     public static final String HEGMA_API_URL = "https://www.snapto.in/graphql/";
     public static final String HEGMA_BETA_API_URL = "https://www.snapto.in/graphql/";
     public static final String HEGMA_API_AUTH_TOKEN = "Bearer U5afPUU6LJ6Ro2gOmqCDn03uRObpXQ";
-    
+    public static final String HEGMA_REDIRECT_URL = "https://www.snapto.in/";
     public static final String RAZORPAY_PAYMENT_ID = "razorpay_payment_id";
     public static final String RAZORPAY_ORDER_ID = "razorpay_order_id";
     public static final String RAZORPAY_SIGNATURE = "razorpay_signature";
