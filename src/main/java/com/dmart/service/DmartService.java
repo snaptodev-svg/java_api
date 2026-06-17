@@ -285,22 +285,11 @@ public class DmartService implements Filter {
                     String mobile = order.getJSONObject("shippingAddress").getString("phone");
                     mobile = mobile.substring(3, mobile.length());
                     String email = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getString("userEmail");
-                    double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");
-//                    if (!isLogin) {
-//                        JSONArray metaArr1 = checkout.getJSONArray("metadata");
-//                        for (int i = 0; i < metaArr1.length(); i++) {
-//                            JSONObject data = metaArr1.getJSONObject(i);
-//                            if (data.getString("key").equalsIgnoreCase("mobile")) {
-//                                mobile = data.getString("value");
-//                            }
-//                        }
-//                    } else {
-//                        mobile = ServiceDao.getMobile(email);
-//                    }
+                    double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");         
                     String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
                     String[] bccrecipients = {"anuj@qmmtech.com"};
                     String[] recipients = {email};
-                    try {
+                    try {       
                         SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                         String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
                                 + EmailConstants.EMAIL_ORDER_BODY_SUMMARY.replace(Constants.KEY_REPLACE_ORDER_NO, orderNo).replace(Constants.KEY_REPLACE_ORDER_DATE, orderDate).replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount)))
@@ -331,11 +320,13 @@ public class DmartService implements Filter {
 
                         subtotalamount = Double.parseDouble(df.format(subtotalamount - weightedShipping));
                         emailMessage = emailMessage + productData;
+                          sendAdminNotification(orderNo, email, name, mobile, amount, Date, slot, "Online");
                         emailMessage = emailMessage + EmailConstants.EMAIL_ORDER_BODY_PRODUCT_TOTAL.replace(Constants.KEY_REPLACE_TOTAL_QUANTITY, String.valueOf(totalQuantity)).
                                 replace(Constants.KEY_REPLACE_SUBTOTAL_PRICE, String.valueOf(df.format(subtotalamount))).replace(Constants.KEY_REPLACE_SHIPPING_PRICE, shippingamount).
                                 replace(Constants.KEY_REPLACE_WEIGHTED_PRICE, String.valueOf(df.format(weightedShipping))).replace(Constants.KEY_REPLACE_DISCOUNT_PRICE, discountamount).
                                 replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount))).replace(Constants.KEY_REPLACE_VOUCHER_CODE, voucherCode)
                                 + EmailConstants.EMAIL_FOOTER;
+                      
                         SendSmtpMail.sendSSLMessagewithBcc(recipients, bccrecipients, "Your Snapto order " + orderNo + " Placed", emailMessage);
                     } catch (MessagingException | UnsupportedEncodingException ex) {
                         Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
@@ -358,6 +349,8 @@ public class DmartService implements Filter {
         }
         if (message.equals("Success")) {
             ServiceDao.updateOrderPaymentStatus(orderid, "Success", isProdDB);
+            // Send admin notification
+          
             return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
         } else {
             ServiceDao.updateOrderPaymentStatus(orderid, "Failed", isProdDB);
@@ -516,6 +509,7 @@ public class DmartService implements Filter {
                         String[] recipients = {email};
                         try {
                             SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
+                              sendAdminNotification(orderNo, email, name, mobile, amount, Date, slot, "Online");
                             String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
                                     + EmailConstants.EMAIL_ORDER_BODY_SUMMARY.replace(Constants.KEY_REPLACE_ORDER_NO, orderNo).replace(Constants.KEY_REPLACE_ORDER_DATE, orderDate).replace(Constants.KEY_REPLACE_ORDER_TOTAL_PRICE, String.valueOf(df.format(amount)))
                                     + EmailConstants.EMAIL_ORDER_BODY_SHIPPING_ADDRESS.replace(Constants.KEY_REPLACE_NAME, name).replace(Constants.KEY_REPLACE_ADDRESS, address).replace(Constants.KEY_REPLACE_COUNTRY, country)
@@ -572,7 +566,7 @@ public class DmartService implements Filter {
             }
             if (message.equals("Success")) {
                 ServiceDao.updateOrderPaymentStatus(orderId, "Success", isProdDB);
-                return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
+                  return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "success.jsp")).build();
             } else {
                 ServiceDao.updateOrderPaymentStatus(orderId, "Failed", isProdDB);
                 return Response.temporaryRedirect(URI.create(Constants.REDIRECT_URL + "failure.jsp")).build();
@@ -702,17 +696,7 @@ public class DmartService implements Filter {
                 mobile = mobile.substring(3, mobile.length());
                 String email = order.getString("userEmail");
                 double amount = order.getJSONObject("total").getJSONObject("gross").getDouble("amount");
-//                if (!isLogin) {
-//                    JSONArray metaArr = checkout.getJSONArray("metadata");
-//                    for (int i = 0; i < metaArr.length(); i++) {
-//                        JSONObject data = metaArr.getJSONObject(i);
-//                        if (data.getString("key").equalsIgnoreCase("mobile")) {
-//                            mobile = data.getString("value");
-//                        }
-//                    }
-//                } else {
-//                    mobile = ServiceDao.getMobile(email);
-//                }
+     
                 String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
                 SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                 String[] bccrecipients = {"anuj@qmmtech.com"};
@@ -821,7 +805,8 @@ public Response sendOTP(String jsonData) {
 
         if (dbInsertStatus) {
             // OTP saved successfully, send via SMS/Email
-            String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
+            // String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE"; 
+            String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
             boolean smsSent = false;
             boolean emailSent = false;
 
@@ -2444,6 +2429,26 @@ public Response sendOTP(String jsonData) {
         }
         return Response.ok().entity("").build();
     }
+    private void sendAdminNotification(String orderNo, String customerEmail, String customerName, 
+                                   String mobile, double amount, String deliveryDate, 
+                                   String slot, String paymentType) {
+    try {
+        String[] adminRecipients = {ADMIN_EMAIL};
+        String subject = "New Order #" + orderNo + " from " + customerEmail;
+        String body = "<h3>New Order Placed</h3>"
+                    + "<b>Order Number:</b> " + orderNo + "<br>"
+                    + "<b>Customer:</b> " + customerName + " (" + customerEmail + ", " + mobile + ")<br>"
+                    + "<b>Total Amount:</b> Rs " + String.format("%.2f", amount) + "<br>"
+                    + "<b>Delivery Date:</b> " + deliveryDate + "<br>"
+                    + "<b>Time Slot:</b> " + slot + "<br>"
+                    + "<b>Payment Type:</b> " + paymentType + "<br>"
+                    + "<b>Please check the admin dashboard for details.</b>";
+        SendSmtpMail.sendSSLMessage(adminRecipients, subject, body);
+    } catch (Exception e) {
+        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, 
+                "Failed to send admin notification for order " + orderNo, e);
+    }
+}
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -2469,4 +2474,5 @@ public Response sendOTP(String jsonData) {
     public void destroy() {
 
     }
+
 }

@@ -40,7 +40,7 @@ public class Constants {
     public static final String KEY_PRODUCT_NAME = "productName";
     public static final String KEY_REMARK = "remark";
     public static final String KEY_STATUS = "status";
-    
+    private static final String ADMIN_EMAIL = "info@snapto.in";
     public static final String KEY_REPLACE_OTP = "{otp}";
     public static final String KEY_REPLACE_ORDER_NO = "{order_no}";
     public static final String KEY_REPLACE_ORDER_DATE = "{order_date}";
