@@ -840,9 +840,8 @@ public Response sendOTP(String jsonData) {
 	    }
 	    // ========================================
             // OTP saved successfully, send via SMS/Email
-          //  String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
-            String msg = "Your Snapto login OTP is "+otp+". It is valid for 10 minutes. Do not share it with anyone. #OaIKlhn7qya";
-	    boolean smsSent = false;
+            String msg = otp + " is the OTP to login to your Snapto Account by SNAP ECOMMERCE";
+            boolean smsSent = false;
             boolean emailSent = false;
 
             if (mobile.length() == 10) {
@@ -916,59 +915,38 @@ public Response sendOTP(String jsonData) {
     }
 }
 
-    
-@POST
-@Path("/verifyOTP")
-@Produces({MediaType.APPLICATION_JSON})
-public Response verifyOTP(String jsonData) {
+    @POST
+    @Path("/verifyOTP")
+    @Produces({MediaType.APPLICATION_JSON})
+    public Response verifyOTP(String jsonData) {
 
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "MrpCartRequest verify otp data");
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            jsonData);
-
-    LoginResponse lr = new LoginResponse();
-    lr.setApi_status(false);
-    ArrayList<LoginError> arr = new ArrayList<>();
-    LoginError le = new LoginError();
-
-    //Validate params
-    Object output = Util.validateParamsInJSON(jsonData,
-            Constants.KEY_MOBILE, Constants.KEY_OTP);
-    if (output instanceof Error) {
-        le.setField("1");
-        le.setMessage("Please enter valid data.");
-        arr.add(le);
-        lr.setErrors(arr);
-        return Response.ok().entity(lr).build();
-    }
-
-    boolean isProdDB = CommonUtil.checkProdDB(request);
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP isProdDB: " + isProdDB);
-
-    //Params
-    JSONObject obj = new JSONObject(jsonData);
-    String mobile = obj.getString(Constants.KEY_MOBILE);
-    String otp = obj.getString(Constants.KEY_OTP);
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP mobile: " + mobile + " | otp: " + otp);
-
-    boolean status = false; // ⚠️ BUGFIX: declare status before the if-block so it's always in scope
-
-    if (mobile != "1234567890" && otp != "198765") { // ⚠️ NOTE: use .equals() not != for String comparison
         Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP calling ServiceDao.verifyOtp for mobile: " + mobile);
+                "MrpCartRequest verify otp data");
+        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
+                jsonData);
 
+        LoginResponse lr = new LoginResponse();
+        lr.setApi_status(false);
+        ArrayList<LoginError> arr = new ArrayList<>();
+        LoginError le = new LoginError();
+        //Validate params
+        Object output = Util.validateParamsInJSON(jsonData,
+                Constants.KEY_MOBILE, Constants.KEY_OTP);
+        if (output instanceof Error) {
+            le.setField("1");
+            le.setMessage("Please enter valid data.");
+            arr.add(le);
+            lr.setErrors(arr);
+            return Response.ok().entity(lr).build();
+        }
+
+        boolean isProdDB = CommonUtil.checkProdDB(request);
+        //Params
+        JSONObject obj = new JSONObject(jsonData);
+        String mobile = obj.getString(Constants.KEY_MOBILE);
+        String otp = obj.getString(Constants.KEY_OTP);
         ArrayList<HashMap<String, String>> data = ServiceDao.verifyOtp(mobile, otp, isProdDB);
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP ServiceDao.verifyOtp result size: " + data.size());
-
         if (data.isEmpty()) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP OTP verification failed for mobile: " + mobile);
             le.setField("1");
             le.setMessage("Please enter valid OTP.");
             arr.add(le);
@@ -976,184 +954,104 @@ public Response verifyOTP(String jsonData) {
             return Response.ok().entity(lr).build();
         }
 
-        status = ServiceDao.updateMobileOTPStatus(mobile, otp, isProdDB);
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP updateMobileOTPStatus result: " + status + " for mobile: " + mobile);
-
+        boolean status = ServiceDao.updateMobileOTPStatus(mobile, otp, isProdDB);
         lr.setApi_status(status);
-    } else {
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP bypassing OTP check for test credentials");
-        status = true; // ⚠️ BUGFIX: status must be true for test bypass to proceed to account creation
-    }
 
-    ArrayList<BasicNameValuePair> headers = new ArrayList<>();
-    headers.add(0, new BasicNameValuePair("Content-Type", "application/json"));
-    String resData;
-    JSONObject obje;
-    String apiResponse = "";
-    String url;
-
-    if (isProdDB) {
-        url = Constants.HEGMA_API_URL;
-    } else {
-        url = Constants.HEGMA_BETA_API_URL;
-    }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP using API URL: " + url);
-
-    JSONObject resobj;
-    String email;
-    if (mobile.length() == 10) {
-        email = mobile + Constants.HEGMA_DOMAIN;
-    } else {
-        email = mobile;
-    }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP resolved email: " + email + " | status: " + status);
-
-    if (status) {
-        ArrayList<HashMap<String, String>> userData;
-        if (mobile.length() == 10) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP fetching accountUserData for mobile: " + mobile);
-            userData = ServiceDao.accountUserData(mobile, isProdDB);
+        ArrayList<BasicNameValuePair> headers = new ArrayList<>();
+        headers.add(0, new BasicNameValuePair("Content-Type",
+                "application/json"));
+        String resData;
+        JSONObject obje;
+        String apiResponse = "";
+        String url;
+        if (isProdDB) {
+            url = Constants.HEGMA_API_URL;
         } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP fetching accountUserEmailData for email: " + mobile);
-            userData = ServiceDao.accountUserEmailData(mobile, isProdDB);
+            url = Constants.HEGMA_BETA_API_URL;
+        }
+        JSONObject resobj;
+        String email;
+        if (mobile.length() == 10) {
+            email = mobile + Constants.HEGMA_DOMAIN;
+        } else {
+            email = mobile;
         }
 
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP userData size: " + userData.size());
-
-        if (userData.isEmpty()) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP NEW USER — calling accountRegister for email: " + email);
-			resData = "mutation{accountRegister(input: {email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD + "\", channel: \"default-channel\", redirectUrl: \"" + Constants.HEGMA_REDIRECT_URL + "\"}){errors{field message}user{email}}}";            
-     			obje = new JSONObject();
-            obje.put("query", resData);
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP accountRegister request payload: " + obje.toString());
-
-            try {
-                apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister raw API response: " + apiResponse);
-            } catch (MalformedURLException ex) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister MalformedURLException: " + ex.getMessage(), ex);
-            } catch (Exception ex) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister unexpected exception: " + ex.getMessage(), ex);
+        if (status) {
+            ArrayList<HashMap<String, String>> userData;
+            if (mobile.length() == 10) {
+                userData = ServiceDao.accountUserData(mobile, isProdDB);
+            } else {
+                userData = ServiceDao.accountUserEmailData(mobile, isProdDB);
+            }
+            if (userData.isEmpty()) {
+                resData = "mutation{accountRegister(input: {email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD + "\"}){errors{message}user{email}}}";
+                obje = new JSONObject();
+                obje.put("query", resData);
+                try {
+                    apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
+                } catch (MalformedURLException ex) {
+                    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                resobj = new JSONObject((String) apiResponse);
+                JSONArray errors = resobj.getJSONObject("data").getJSONObject("accountRegister").getJSONArray("errors");
+                if (errors.length() == 0) {
+                    ServiceDao.updateUserMobile(mobile, email, isProdDB);
+                } else {
+                    le.setField("1");
+                    le.setMessage(errors.getJSONObject(0).getString("message"));
+                    arr.add(le);
+                    lr.setErrors(arr);
+                    lr.setApi_status(false);
+                    return Response.ok().entity(lr).build();
+                }
+            } else {
+                if (userData.size() > 0) {
+                    for (int ii = 0; ii < userData.size(); ii++) {
+                        email = userData.get(ii).get("email");
+                    }
+                }
+                if (mobile.length() == 10) {
+                    ServiceDao.updateUserPassword(mobile, isProdDB);
+                } else {
+                    ServiceDao.updateUserEmailPassword(email, Constants.HEGMA_ENC_PASSWORD, isProdDB);
+                }
             }
 
+            resData = "mutation TokenAuth {tokenCreate(email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD
+                    + "\") {errors {field,message},token,refreshToken,user {id,firstName,lastName,email}}}";
+            obje = new JSONObject();
+            obje.put("query", resData);
+            try {
+                apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE, null, ex);
+            }
             resobj = new JSONObject((String) apiResponse);
-            JSONArray errors = resobj.getJSONObject("data").getJSONObject("accountRegister").getJSONArray("errors");
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP accountRegister errors count: " + errors.length());
-
+            JSONArray errors = resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONArray("errors");
             if (errors.length() == 0) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister SUCCESS — calling updateUserMobile for mobile: " + mobile);
-                ServiceDao.updateUserMobile(mobile, email, isProdDB);
+                User user = new User();
+                user.setFirstName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("firstName"));
+                user.setLastName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("lastName"));
+                user.setId(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("id"));
+                user.setEmail(email);
+
+                lr.setToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("token"));
+                lr.setRefreshToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("refreshToken"));
+                lr.setUser(user);
+
+                ServiceDao.updateUserEmailPassword(email, "", isProdDB);
+
             } else {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP accountRegister FAILED — error: " + errors.getJSONObject(0).getString("message"));
                 le.setField("1");
                 le.setMessage(errors.getJSONObject(0).getString("message"));
                 arr.add(le);
                 lr.setErrors(arr);
                 lr.setApi_status(false);
-                return Response.ok().entity(lr).build();
-            }
-        } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP EXISTING USER found — skipping accountRegister");
-
-            if (userData.size() > 0) {
-                for (int ii = 0; ii < userData.size(); ii++) {
-                    email = userData.get(ii).get("email");
-                }
-            }
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP resolved existing user email: " + email);
-
-            if (mobile.length() == 10) {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP calling updateUserPassword for mobile: " + mobile);
-                ServiceDao.updateUserPassword(mobile, isProdDB);
-            } else {
-                Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                        "verifyOTP calling updateUserEmailPassword for email: " + email);
-                ServiceDao.updateUserEmailPassword(email, Constants.HEGMA_ENC_PASSWORD, isProdDB);
             }
         }
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP calling tokenCreate for email: " + email);
-
-        resData = "mutation TokenAuth {tokenCreate(email: \"" + email + "\", password: \"" + Constants.HEGMA_PASSWORD
-                + "\") {errors {field,message},token,refreshToken,user {id,firstName,lastName,email}}}";
-        obje = new JSONObject();
-        obje.put("query", resData);
-
-        try {
-            apiResponse = HTTPUtil.executeUrl(new URL(url), obje.toString(), headers, Constants.HTTP_REQUEST.POST.name());
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate raw API response: " + apiResponse);
-        } catch (MalformedURLException ex) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate MalformedURLException: " + ex.getMessage(), ex);
-        } catch (Exception ex) {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate unexpected exception: " + ex.getMessage(), ex);
-        }
-
-        resobj = new JSONObject((String) apiResponse);
-        JSONArray errors = resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONArray("errors");
-
-        Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                "verifyOTP tokenCreate errors count: " + errors.length());
-
-        if (errors.length() == 0) {
-            User user = new User();
-            user.setFirstName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("firstName"));
-            user.setLastName(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("lastName"));
-            user.setId(resobj.getJSONObject("data").getJSONObject("tokenCreate").getJSONObject("user").getString("id"));
-            user.setEmail(email);
-
-            lr.setToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("token"));
-            lr.setRefreshToken(resobj.getJSONObject("data").getJSONObject("tokenCreate").getString("refreshToken"));
-            lr.setUser(user);
-
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate SUCCESS — clearing password for email: " + email);
-
-            ServiceDao.updateUserEmailPassword(email, "", isProdDB);
-        } else {
-            Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-                    "verifyOTP tokenCreate FAILED — error: " + errors.getJSONObject(0).getString("message"));
-            le.setField("1");
-            le.setMessage(errors.getJSONObject(0).getString("message"));
-            arr.add(le);
-            lr.setErrors(arr);
-            lr.setApi_status(false);
-        }
+        return Response.ok().entity(lr).build();
     }
-
-    Logger.getLogger(DmartService.class.getName()).log(Level.SEVERE,
-            "verifyOTP final response api_status: " + lr.getApi_status());
-
-    return Response.ok().entity(lr).build();
-}
-
-
 
     @POST
     @Path("/bulkDiscounts")
