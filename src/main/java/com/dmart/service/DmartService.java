@@ -287,8 +287,8 @@ public class DmartService implements Filter {
                     String email = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getString("userEmail");
                     double amount = resobj.getJSONObject("data").getJSONObject("orderCreateFromCheckout").getJSONObject("order").getJSONObject("total").getJSONObject("gross").getDouble("amount");         
                     String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
-                    String[] bccrecipients = {"info@snapto.in"};
-                    String[] recipients = {email};
+                    String[] bccrecipients = {""};
+                    String[] recipients = {"info@snapto.in"};
                     try {       
                         SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                         String emailMessage = EmailConstants.EMAIL_HEAD + EmailConstants.EMAIL_ORDER_BODY1.replace(Constants.KEY_REPLACE_DELIVERY_TIME, Date + " " + slot)
@@ -505,8 +505,8 @@ public class DmartService implements Filter {
 //                        mobile = ServiceDao.getMobile(email);
 //                    }
                         String msg = "Your order no. " + orderNo + " of Rs " + df.format(amount) + " is confirmed. It will be delivered as per your selected date and time slot. Thank You - Snapto by SNAP ECOMMERCE";
-                        String[] bccrecipients = {"info@snapto.in"};
-                        String[] recipients = {email};
+                        String[] bccrecipients = {""};
+                        String[] recipients = {"info@snapto.in"};
                         try {
                             SMSUtility.SendTransactionalSMSMSG91ROCKET(mobile, msg, Constants.MSG91_ORDER_DLE_ID);
                               sendAdminNotification(orderNo, email, name, mobile, amount, Date, slot, "Online");
